@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yard cameras — Remote Desktop</title>
+  <link rel="icon" type="image/png" href="/static/PIT.png">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top left, #1e293b 0, #0f172a 42%, #020617 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 20px 16px 40px;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    .top {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    h1 { margin: 0; font-size: 24px; }
+    .sub { color: #94a3b8; font-size: 14px; margin-top: 4px; }
+    a.btn, button.btn {
+      border: 1px solid #334155;
+      background: rgba(15, 23, 42, 0.85);
+      color: #cbd5e1;
+      padding: 9px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-block;
+    }
+    a.btn:hover, button.btn:hover { color: #fff; border-color: #475569; }
+    button.btn.primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #fff;
+    }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+    }
+    .cam-card {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .cam-head {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #1e293b;
+      gap: 8px;
+    }
+    .cam-head strong { font-size: 15px; }
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #334155;
+      color: #94a3b8;
+    }
+    .badge.on { color: #4ade80; border-color: rgba(74,222,128,.4); background: rgba(74,222,128,.08); }
+    .badge.audio { color: #38bdf8; border-color: rgba(56,189,248,.4); }
+    .view {
+      background: #000;
+      min-height: 240px;
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .view img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    .view .ph { color: #64748b; font-size: 13px; padding: 16px; text-align: center; }
+    .cam-foot {
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      border-top: 1px solid #1e293b;
+    }
+    .settings {
+      margin-top: 18px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .settings h2 { margin: 0 0 12px; font-size: 17px; }
+    .settings.hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+    th { color: #94a3b8; font-weight: 500; }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      min-width: 0;
+      background: #0b1220;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 13px;
+    }
+    .row-audio {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .row-audio label { color: #94a3b8; font-size: 13px; }
+    .note { color: #64748b; font-size: 12px; line-height: 1.5; margin-top: 12px; }
+    .status { font-size: 13px; color: #94a3b8; }
+    .status.err { color: #f87171; }
+    .status.ok { color: #4ade80; }
+    audio { width: 100%; max-width: 320px; height: 32px; }
+    .rec-list { padding: 10px 12px 14px; border-top: 1px solid #1e293b; }
+    .rec-list h3 { margin: 0 0 8px; font-size: 13px; color: #94a3b8; font-weight: 600; }
+    .rec-list ul { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto; }
+    .rec-list li {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 6px 0; border-bottom: 1px solid #1e293b; font-size: 13px;
+    }
+    .rec-list li:last-child { border-bottom: 0; }
+    .rec-list button.play {
+      border: 1px solid #334155; background: #0b1220; color: #e2e8f0;
+      border-radius: 8px; padding: 4px 10px; cursor: pointer; font-size: 12px;
+    }
+    .rec-list button.play:hover { border-color: #3b82f6; }
+    .rec-list video {
+      width: 100%; max-height: 220px; margin-top: 8px; border-radius: 8px; background: #000;
+    }
+    .motion-badge { font-size: 11px; color: #fbbf24; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>📷 Yard cameras</h1>
+      <div class="sub">Two USB cameras on the server · video + audio from one mic</div>
+    </div>
+    <div class="actions">
+      <span class="status" id="status">Loading…</span>
+      <button type="button" class="btn" id="btn-refresh">Refresh streams</button>
+      <button type="button" class="btn" id="btn-settings">Settings</button>
+      <a class="btn" href="/">← Dashboard</a>
+    </div>
+  </div>
+
+  <div class="grid" id="cam-grid"></div>
+
+  <div class="settings hidden" id="settings">
+    <h2>Camera settings</h2>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Video device</th>
+            <th>Audio (ALSA)</th>
+            <th>W</th>
+            <th>H</th>
+            <th>FPS</th>
+            <th>On</th>
+          </tr>
+        </thead>
+        <tbody id="settings-body"></tbody>
+      </table>
+    </div>
+    <div class="row-audio">
+      <label for="audio-from">Listen to audio from:</label>
+      <select id="audio-from" style="max-width:220px"></select>
+      <button type="button" class="btn primary" id="btn-save">Save</button>
+      <button type="button" class="btn" id="btn-detect">Detect devices</button>
+    </div>
+    <p class="note" id="detect-note">
+      Typical USB pair on this Pi: <code>/dev/video0</code> and <code>/dev/video2</code>
+      (odd nodes are often metadata). Audio: <code>plughw:N,0</code> from <code>arecord -l</code>.
+      Only one camera mic plays at a time.
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const grid = document.getElementById("cam-grid");
+  const statusEl = document.getElementById("status");
+  const settings = document.getElementById("settings");
+  const settingsBody = document.getElementById("settings-body");
+  const audioFrom = document.getElementById("audio-from");
+  const detectNote = document.getElementById("detect-note");
+
+  let cfg = null;
+  let audioEl = null;
+
+  function setStatus(text, cls) {
+    statusEl.textContent = text;
+    statusEl.className = "status" + (cls ? " " + cls : "");
+  }
+
+  function streamUrl(id) {
+    return "/api/local-cams/" + encodeURIComponent(id) + "/stream?t=" + Date.now();
+  }
+
+  function audioUrl(id) {
+    return "/api/local-cams/" + encodeURIComponent(id) + "/audio?t=" + Date.now();
+  }
+
+  function renderCams() {
+    if (!cfg) return;
+    grid.innerHTML = "";
+    const audioId = cfg.audio_from || "";
+    (cfg.cameras || []).forEach(function (cam) {
+      const card = document.createElement("div");
+      card.className = "cam-card";
+      const isAudio = audioId && audioId === cam.id;
+      card.innerHTML =
+        '<div class="cam-head">' +
+          "<strong>" + escapeHtml(cam.name || cam.id) + "</strong>" +
+          '<span class="badge ' + (cam.enabled ? "on" : "") + '">' +
+            (cam.enabled ? "Live" : "Off") +
+          "</span>" +
+          (isAudio ? '<span class="badge audio">Audio</span>' : "") +
+        "</div>" +
+        '<div class="view" id="view-' + escapeHtml(cam.id) + '"></div>' +
+        '<div class="cam-foot">' +
+          "<span style=\"font-size:12px;color:#64748b\">" + escapeHtml(cam.device || "—") + "</span>" +
+        "</div>";
+      grid.appendChild(card);
+
+      const view = card.querySelector(".view");
+      if (!cam.enabled) {
+        view.innerHTML = '<div class="ph">Disabled in settings</div>';
+      } else {
+        const img = document.createElement("img");
+        img.alt = cam.name || cam.id;
+        img.src = streamUrl(cam.id);
+        img.onerror = function () {
+          view.innerHTML = '<div class="ph">No signal · check device in Settings</div>';
+        };
+        view.appendChild(img);
+      }
+      const side = (cam.side === "right" || cam.side === "r") ? "right" : "left";
+      const recBox = document.createElement("div");
+      recBox.className = "rec-list";
+      recBox.id = "rec-" + side;
+      recBox.innerHTML = "<h3>Recordings (" + (side === "left" ? "L…" : "R…") + ")</h3><ul><li>Loading…</li></ul>";
+      card.appendChild(recBox);
+    });
+    loadRecordings();
+
+    // single audio element
+    if (audioEl) {
+      audioEl.pause();
+      audioEl.remove();
+      audioEl = null;
+    }
+    if (audioId) {
+      audioEl = document.createElement("audio");
+      audioEl.controls = true;
+      audioEl.autoplay = true;
+      audioEl.src = audioUrl(audioId);
+      audioEl.style.marginTop = "14px";
+      grid.parentNode.insertBefore(audioEl, settings);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function fillSettings(detected) {
+    if (!cfg) return;
+    settingsBody.innerHTML = "";
+    audioFrom.innerHTML = '<option value="">— Silent —</option>';
+    (cfg.cameras || []).forEach(function (cam, idx) {
+      const tr = document.createElement("tr");
+      tr.dataset.idx = String(idx);
+      const videoOpts = (detected && detected.video) || [];
+      const audioOpts = (detected && detected.audio) || [];
+      let videoSelect = '<input type="text" data-k="device" value="' + escapeHtml(cam.device || "") + '" list="vlist' + idx + '">';
+      videoSelect += '<datalist id="vlist' + idx + '">';
+      videoOpts.forEach(function (v) {
+        videoSelect += '<option value="' + escapeHtml(v.path) + '">' + escapeHtml(v.label) + "</option>";
+      });
+      videoSelect += "</datalist>";
+
+      let audioSelect = '<input type="text" data-k="audio_device" value="' + escapeHtml(cam.audio_device || "") + '" list="alist' + idx + '">';
+      audioSelect += '<datalist id="alist' + idx + '">';
+      audioOpts.forEach(function (a) {
+        audioSelect += '<option value="' + escapeHtml(a.plughw) + '">' + escapeHtml(a.label) + "</option>";
+      });
+      audioSelect += "</datalist>";
+
+      tr.innerHTML =
+        '<td><input type="text" data-k="name" value="' + escapeHtml(cam.name || "") + '"></td>' +
+        "<td>" + videoSelect + "</td>" +
+        "<td>" + audioSelect + "</td>" +
+        '<td style="width:64px"><input type="number" data-k="width" min="160" max="1920" value="' + (cam.width || 640) + '"></td>' +
+        '<td style="width:64px"><input type="number" data-k="height" min="120" max="1080" value="' + (cam.height || 480) + '"></td>' +
+        '<td style="width:56px"><input type="number" data-k="fps" min="1" max="30" value="' + (cam.fps || 10) + '"></td>' +
+        '<td style="width:40px;text-align:center"><input type="checkbox" data-k="enabled" ' + (cam.enabled !== false ? "checked" : "") + "></td>";
+      settingsBody.appendChild(tr);
+
+      const opt = document.createElement("option");
+      opt.value = cam.id;
+      opt.textContent = cam.name || cam.id;
+      if (cfg.audio_from === cam.id) opt.selected = true;
+      audioFrom.appendChild(opt);
+    });
+  }
+
+  function collectSettings() {
+    const cameras = [];
+    settingsBody.querySelectorAll("tr").forEach(function (tr, idx) {
+      const prev = (cfg.cameras || [])[idx] || {};
+      const get = function (k) {
+        const el = tr.querySelector('[data-k="' + k + '"]');
+        if (!el) return prev[k];
+        if (el.type === "checkbox") return el.checked;
+        if (el.type === "number") return parseInt(el.value, 10);
+        return el.value.trim();
+      };
+      cameras.push({
+        id: prev.id || ("cam" + (idx + 1)),
+        name: get("name"),
+        device: get("device"),
+        audio_device: get("audio_device"),
+        width: get("width"),
+        height: get("height"),
+        fps: get("fps"),
+        enabled: get("enabled"),
+      });
+    });
+    return {
+      cameras: cameras,
+      audio_from: audioFrom.value || "",
+    };
+  }
+
+
+  async function loadRecordings() {
+    try {
+      const r = await fetch("/api/local-cams/recordings", { credentials: "same-origin" });
+      if (!r.ok) return;
+      const data = await r.json();
+      ["left", "right"].forEach(function (side) {
+        const box = document.getElementById("rec-" + side);
+        if (!box) return;
+        const files = data[side] || [];
+        const ul = document.createElement("ul");
+        if (!files.length) {
+          ul.innerHTML = "<li style=\"color:#64748b\">No clips yet — waiting for motion</li>";
+        } else {
+          files.forEach(function (f) {
+            const li = document.createElement("li");
+            const when = f.mtime ? new Date(f.mtime * 1000).toLocaleString() : "";
+            li.innerHTML =
+              "<strong>" + escapeHtml(f.name) + "</strong>" +
+              "<span style=\"color:#64748b;font-size:12px\">" + when + "</span>" +
+              '<button type="button" class="play" data-url="' + escapeHtml(f.url) + '">▶ Play</button>';
+            ul.appendChild(li);
+          });
+        }
+        const h = box.querySelector("h3");
+        box.innerHTML = "";
+        if (h) box.appendChild(h);
+        else {
+          const nh = document.createElement("h3");
+          nh.textContent = "Recordings";
+          box.appendChild(nh);
+        }
+        box.appendChild(ul);
+        const player = document.createElement("video");
+        player.controls = true;
+        player.playsInline = true;
+        player.style.display = "none";
+        box.appendChild(player);
+        ul.querySelectorAll("button.play").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            player.style.display = "block";
+            player.src = btn.getAttribute("data-url");
+            player.play().catch(function () {});
+          });
+        });
+      });
+      if (data.motion && data.motion.running) {
+        setStatus("Live + motion detect", "ok");
+      }
+    } catch (e) {}
+  }
+
+  async function loadConfig() {
+    setStatus("Loading…");
+    const r = await fetch("/api/local-cams", { credentials: "same-origin" });
+    if (r.status === 401 || r.status === 303) {
+      location.href = "/login";
+      return;
+    }
+    if (!r.ok) {
+      setStatus("Config error " + r.status, "err");
+      return;
+    }
+    cfg = await r.json();
+    setStatus("Ready", "ok");
+    renderCams();
+    fillSettings(null);
+  }
+
+  async function detect() {
+    setStatus("Detecting…");
+    const r = await fetch("/api/local-cams/detect", { credentials: "same-origin" });
+    if (!r.ok) {
+      setStatus("Detect failed", "err");
+      return;
+    }
+    const d = await r.json();
+    fillSettings(d);
+    detectNote.innerHTML =
+      "Found video: <code>" +
+      (d.video || []).map(function (v) { return v.path; }).join("</code>, <code>") +
+      "</code><br>Audio: <code>" +
+      (d.audio || []).map(function (a) { return a.plughw; }).join("</code>, <code>") +
+      "</code>";
+    setStatus("Devices listed", "ok");
+  }
+
+  async function save() {
+    const body = collectSettings();
+    setStatus("Saving…");
+    const r = await fetch("/api/local-cams", {
+      method: "PUT",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      setStatus("Save failed", "err");
+      return;
+    }
+    cfg = await r.json();
+    setStatus("Saved", "ok");
+    renderCams();
+    fillSettings(null);
+  }
+
+  document.getElementById("btn-settings").addEventListener("click", function () {
+    settings.classList.toggle("hidden");
+  });
+  document.getElementById("btn-refresh").addEventListener("click", function () {
+    renderCams();
+    loadRecordings();
+    setStatus("Streams refreshed", "ok");
+  });
+  document.getElementById("btn-save").addEventListener("click", save);
+  document.getElementById("btn-detect").addEventListener("click", detect);
+
+  loadConfig().catch(function (e) {
+    setStatus(String(e), "err");
+  });
+  setInterval(function () { loadRecordings(); }, 20000);
+})();
+</script>
+</body>
+</html>

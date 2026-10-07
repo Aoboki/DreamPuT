@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <link rel="icon" type="image/png" href="/static/PIT.png">
+    <link rel="shortcut icon" type="image/png" href="/static/PIT.png">
+    <link rel="apple-touch-icon" href="/static/PIT.png">
+
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Remote PowerShell
+    </title>
+
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ===================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+
+            margin: 0;
+
+            padding: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            overflow: hidden;
+
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+
+            background: #0b0f14;
+
+            color: #d7e0ea;
+        }
+
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .powershell-page {
+
+            width: 100%;
+
+            height: 100%;
+
+            display: flex;
+
+            flex-direction: column;
+
+            background: #0b0f14;
+        }
+
+
+        /* =====================================================
+           HEADER
+        ===================================================== */
+
+        .topbar {
+
+            height: 64px;
+
+            min-height: 64px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 20px;
+
+            background: #111720;
+
+            border-bottom:
+                1px solid #26313d;
+        }
+
+
+        .title-area {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+
+        .terminal-icon {
+
+            width: 38px;
+
+            height: 38px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            border-radius: 8px;
+
+            background: #18212c;
+
+            color: #58a6ff;
+
+            font-size: 20px;
+        }
+
+
+        .title {
+
+            font-size: 18px;
+
+            font-weight: 700;
+
+            color: #f0f6fc;
+        }
+
+
+        .subtitle {
+
+            margin-top: 2px;
+
+            font-size: 12px;
+
+            color: #7d8996;
+        }
+
+
+        /* =====================================================
+           HOST
+        ===================================================== */
+
+        .host-area {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 14px;
+        }
+
+
+        .host-label {
+
+            color: #7d8996;
+
+            font-size: 12px;
+        }
+
+
+        .host-id {
+
+            color: #58a6ff;
+
+            font-size: 14px;
+
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           STATUS
+        ===================================================== */
+
+        .status {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding:
+                7px
+                12px;
+
+            border-radius: 20px;
+
+            background: #151c24;
+
+            border:
+                1px solid #28333f;
+
+            font-family:
+                Arial,
+                sans-serif;
+
+            font-size: 12px;
+        }
+
+
+        .status-dot {
+
+            width: 9px;
+
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: #6e7681;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(110, 118, 129, 0.12);
+        }
+
+
+        .status-dot.online {
+
+            background: #3fb950;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(63, 185, 80, 0.12);
+        }
+
+
+        .status-dot.error {
+
+            background: #f85149;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(248, 81, 73, 0.12);
+        }
+
+
+        #statusText {
+
+            color: #b8c2cc;
+        }
+
+
+        /* =====================================================
+           TOOLBAR
+        ===================================================== */
+
+        .toolbar {
+
+            min-height: 54px;
+
+            height: 54px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding:
+                8px
+                14px;
+
+            background: #0f151d;
+
+            border-bottom:
+                1px solid #26313d;
+        }
+
+
+        button {
+
+            height: 36px;
+
+            padding:
+                0
+                14px;
+
+            border-radius: 6px;
+
+            border:
+                1px solid #303b48;
+
+            background: #171f29;
+
+            color: #d7e0ea;
+
+            font-family:
+                Arial,
+                sans-serif;
+
+            font-size: 13px;
+
+            cursor: pointer;
+
+            transition:
+                background 0.15s,
+                border-color 0.15s,
+                opacity 0.15s;
+        }
+
+
+        button:hover:not(:disabled) {
+
+            background: #202b37;
+
+            border-color: #465463;
+        }
+
+
+        button:active:not(:disabled) {
+
+            background: #263341;
+        }
+
+
+        button:disabled {
+
+            opacity: 0.4;
+
+            cursor: not-allowed;
+        }
+
+
+        #startButton {
+
+            color: #3fb950;
+        }
+
+
+        #stopButton {
+
+            color: #f85149;
+        }
+
+
+        #executeButton,
+        #sendButton {
+
+            color: #58a6ff;
+        }
+
+
+        #clearButton {
+
+            color: #d29922;
+        }
+
+
+        .toolbar-spacer {
+
+            flex: 1;
+        }
+
+
+        /* =====================================================
+           TERMINAL
+        ===================================================== */
+
+        .terminal-container {
+
+            flex: 1;
+
+            min-height: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            padding: 12px;
+
+            background: #080c10;
+        }
+
+
+        .terminal {
+
+            flex: 1;
+
+            min-height: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            border:
+                1px solid #26313d;
+
+            border-radius: 8px;
+
+            overflow: hidden;
+
+            background: #05080b;
+
+            box-shadow:
+                0 8px 30px
+                rgba(0, 0, 0, 0.25);
+        }
+
+
+        /* =====================================================
+           TERMINAL HEADER
+        ===================================================== */
+
+        .terminal-header {
+
+            height: 34px;
+
+            min-height: 34px;
+
+            display: flex;
+
+            align-items: center;
+
+            padding:
+                0
+                12px;
+
+            background: #111820;
+
+            border-bottom:
+                1px solid #202b36;
+
+            color: #7d8996;
+
+            font-size: 12px;
+        }
+
+
+        .terminal-lights {
+
+            display: flex;
+
+            gap: 6px;
+
+            margin-right: 10px;
+        }
+
+
+        .terminal-light {
+
+            width: 9px;
+
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: #3a434d;
+        }
+
+
+        .terminal-title {
+
+            color: #8b949e;
+        }
+
+
+        /* =====================================================
+           OUTPUT
+        ===================================================== */
+
+        #output {
+
+            flex: 1;
+
+            min-height: 0;
+
+            overflow-y: auto;
+
+            overflow-x: hidden;
+
+            padding:
+                14px
+                16px;
+
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+
+            font-size: 13px;
+
+            line-height: 1.55;
+
+            color: #c9d1d9;
+
+            white-space: pre-wrap;
+
+            word-break: break-word;
+
+            background: #05080b;
+        }
+
+
+        #output::-webkit-scrollbar {
+
+            width: 9px;
+        }
+
+
+        #output::-webkit-scrollbar-track {
+
+            background: #090d12;
+        }
+
+
+        #output::-webkit-scrollbar-thumb {
+
+            background: #26313d;
+
+            border-radius: 5px;
+        }
+
+
+        #output::-webkit-scrollbar-thumb:hover {
+
+            background: #344250;
+        }
+
+
+        .output-line {
+
+            margin: 0 0 3px 0;
+
+            white-space: pre-wrap;
+
+            word-break: break-word;
+        }
+
+
+        .output-system {
+
+            color: #8b949e;
+        }
+
+
+        .output-command {
+
+            color: #58a6ff;
+
+            margin-top: 7px;
+        }
+
+
+        .output-result {
+
+            color: #c9d1d9;
+        }
+
+
+        .output-success {
+
+            color: #3fb950;
+        }
+
+
+        .output-error {
+
+            color: #f85149;
+        }
+
+
+        /* =====================================================
+           COMMAND AREA
+        ===================================================== */
+
+        .command-area {
+
+            min-height: 56px;
+
+            height: 56px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            padding:
+                9px
+                12px;
+
+            background: #0d131a;
+
+            border-top:
+                1px solid #202b36;
+        }
+
+
+        .prompt {
+
+            flex-shrink: 0;
+
+            color: #3fb950;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+
+        #commandInput {
+
+            flex: 1;
+
+            min-width: 0;
+
+            height: 38px;
+
+            padding:
+                0
+                11px;
+
+            border:
+                1px solid #303b48;
+
+            border-radius: 6px;
+
+            outline: none;
+
+            background: #080c10;
+
+            color: #e6edf3;
+
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+
+            font-size: 13px;
+        }
+
+
+        #commandInput:focus {
+
+            border-color: #58a6ff;
+
+            box-shadow:
+                0 0 0 2px
+                rgba(88, 166, 255, 0.12);
+        }
+
+
+        #commandInput::placeholder {
+
+            color: #586572;
+        }
+
+
+        /* =====================================================
+           SEND
+        ===================================================== */
+
+        #sendButton {
+
+            min-width: 82px;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .footer {
+
+            height: 26px;
+
+            min-height: 26px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding:
+                0
+                14px;
+
+            background: #0d131a;
+
+            border-top:
+                1px solid #1d2731;
+
+            color: #586572;
+
+            font-family:
+                Arial,
+                sans-serif;
+
+            font-size: 10px;
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 700px) {
+
+            .topbar {
+
+                height: auto;
+
+                min-height: 64px;
+
+                padding:
+                    10px
+                    12px;
+
+                gap: 10px;
+            }
+
+
+            .title {
+
+                font-size: 15px;
+            }
+
+
+            .subtitle {
+
+                display: none;
+            }
+
+
+            .host-area {
+
+                gap: 8px;
+            }
+
+
+            .host-label {
+
+                display: none;
+            }
+
+
+            .host-id {
+
+                max-width: 110px;
+
+                overflow: hidden;
+
+                text-overflow: ellipsis;
+
+                white-space: nowrap;
+            }
+
+
+            .toolbar {
+
+                height: auto;
+
+                min-height: 54px;
+
+                flex-wrap: wrap;
+
+                padding: 7px;
+            }
+
+
+            button {
+
+                height: 34px;
+
+                padding:
+                    0
+                    10px;
+
+                font-size: 12px;
+            }
+
+
+            .toolbar-spacer {
+
+                display: none;
+            }
+
+
+            .terminal-container {
+
+                padding: 7px;
+            }
+
+
+            #output {
+
+                font-size: 12px;
+
+                padding:
+                    11px;
+            }
+
+
+            .command-area {
+
+                height: auto;
+
+                min-height: 56px;
+
+                padding: 8px;
+
+                flex-wrap: wrap;
+            }
+
+
+            .prompt {
+
+                display: none;
+            }
+
+
+            #commandInput {
+
+                width: 100%;
+
+                flex: 1 1 100%;
+            }
+
+
+            #sendButton {
+
+                width: 100%;
+            }
+
+
+            .footer {
+
+                display: none;
+            }
+
+        }
+
+    
+        .workspace {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .quick-panel {
+            width: 220px;
+            flex-shrink: 0;
+            background: #0f151d;
+            border-left: 1px solid #26313d;
+            padding: 12px 10px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quick-panel-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #7d8a99;
+            margin: 4px 4px 8px;
+        }
+
+        .quick-btn {
+            width: 100%;
+            height: auto;
+            min-height: 36px;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.3;
+            white-space: normal;
+        }
+
+        .quick-btn.danger {
+            color: #f85149;
+            border-color: #5a3030;
+        }
+
+        .quick-btn.warn {
+            color: #d29922;
+        }
+
+        @media (max-width: 800px) {
+            .workspace {
+                flex-direction: column;
+            }
+            .quick-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #26313d;
+                flex-direction: row;
+                flex-wrap: wrap;
+                max-height: 160px;
+            }
+            .quick-btn {
+                width: auto;
+                flex: 1 1 40%;
+            }
+        }
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="powershell-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="title-area">
+
+            <div class="terminal-icon">
+                PS
+            </div>
+
+            <div>
+
+                <div class="title">
+                    Remote PowerShell
+                </div>
+
+                <div class="subtitle">
+                    Remote command console
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="host-area">
+
+            <div class="host-label">
+                HOST:
+            </div>
+
+            <div
+                id="hostId"
+                class="host-id"
+            >
+                Loading...
+            </div>
+
+
+            <div class="status">
+
+                <div
+                    id="statusDot"
+                    class="status-dot"
+                ></div>
+
+                <span id="statusText">
+                    Connecting...
+                </span>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         TOOLBAR
+    ====================================================== -->
+
+    <div class="toolbar">
+
+        <button
+            id="startButton"
+            type="button"
+        >
+            ▶ Start
+        </button>
+
+
+        <button
+            id="stopButton"
+            type="button"
+            disabled
+        >
+            ■ Stop
+        </button>
+
+
+        <button
+            id="executeButton"
+            type="button"
+            disabled
+        >
+            ⚡ Execute
+        </button>
+
+
+        <button
+            id="clearButton"
+            type="button"
+        >
+            🧹 Clear
+        </button>
+
+
+        <div class="toolbar-spacer"></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TERMINAL
+    ====================================================== -->
+
+    <div class="workspace">
+
+    <main class="terminal-container">
+
+        <div class="terminal">
+
+
+            <!-- TERMINAL HEADER -->
+
+            <div class="terminal-header">
+
+                <div class="terminal-lights">
+
+                    <div class="terminal-light"></div>
+
+                    <div class="terminal-light"></div>
+
+                    <div class="terminal-light"></div>
+
+                </div>
+
+                <div class="terminal-title">
+                    Windows PowerShell
+                </div>
+
+            </div>
+
+
+            <!-- OUTPUT -->
+
+            <div id="output">
+
+            </div>
+
+
+            <!-- COMMAND -->
+
+            <div class="command-area">
+
+                <div class="prompt">
+                    PS&gt;
+                </div>
+
+
+                <input
+                    id="commandInput"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="Введите PowerShell команду..."
+                >
+
+
+                <button
+                    id="sendButton"
+                    type="button"
+                    disabled
+                >
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <aside class="quick-panel" id="quickPanel">
+        <div class="quick-panel-title">Быстрые команды</div>
+        <button type="button" class="quick-btn danger" data-cmd='shutdown /s /t 0'>⏻ Выключить ПК</button>
+        <button type="button" class="quick-btn warn" data-cmd='shutdown /r /t 0'>🔄 Перезагрузить ПК</button>
+        <button type="button" class="quick-btn" data-cmd='netsh wlan show interfaces'>📶 Wi‑Fi проверка</button>
+        <button type="button" class="quick-btn" data-cmd='netsh wlan show networks'>📡 Доступные сети</button>
+        <button type="button" class="quick-btn" data-cmd="netsh wlan connect name=&quot;000000&quot;">🔗 Замена сети</button>
+        <button type="button" class="quick-btn" data-cmd="Copy-Item -Path '' -Destination ''">📋 Копирование</button>
+        <button type="button" class="quick-btn" data-cmd='cd ..'>📁 Назад из папки</button>
+        <div class="quick-panel-title" style="margin-top:12px;">Подсказка</div>
+        <div style="font-size:11px;color:#7d8a99;padding:0 4px;line-height:1.4;">
+            Кнопка только вставляет команду в строку.<br>
+            Отредактируйте и нажмите <b>Send</b>.
+        </div>
+    </aside>
+
+    </div>
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer class="footer">
+
+        <span>
+            Remote PowerShell Console
+        </span>
+
+        <span>
+            Enter — execute command
+        </span>
+
+    </footer>
+
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script
+    src="/static/js/powershell.js?v=8"
+    defer
+></script>
+
+
+</body>
+
+</html>

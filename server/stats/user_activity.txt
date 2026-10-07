@@ -1,0 +1,2 @@
+# User activity log
+# Format: TIME | IP: x.x.x.x | Login: name | Event: login_ok|login_fail

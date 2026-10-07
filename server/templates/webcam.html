@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/png" href="/static/PIT.png">
+    <link rel="shortcut icon" type="image/png" href="/static/PIT.png">
+    <link rel="apple-touch-icon" href="/static/PIT.png">
+
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Web Camera — Remote Desktop</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+
+            margin: 0;
+            padding: 0;
+
+            min-height: 100%;
+
+        }
+
+
+        body {
+
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    #1e293b 0,
+                    #0f172a 42%,
+                    #020617 100%
+                );
+
+            color: #e5e7eb;
+
+            min-height: 100vh;
+
+            padding: 30px 20px;
+
+        }
+
+
+        .container {
+
+            width: 100%;
+
+            max-width: 1100px;
+
+            margin: 0 auto;
+
+        }
+
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+            margin-bottom:
+                20px;
+
+        }
+
+
+        .header-left {
+
+            display: flex;
+
+            align-items:
+                center;
+
+            gap: 12px;
+
+        }
+
+
+        .header-icon {
+
+            font-size: 30px;
+
+        }
+
+
+        .header-title {
+
+            margin: 0;
+
+            font-size: 30px;
+
+            font-weight: 700;
+
+            color: #f8fafc;
+
+        }
+
+
+        .header-subtitle {
+
+            margin-top: 5px;
+
+            color: #94a3b8;
+
+            font-size: 14px;
+
+        }
+
+
+        .back-button {
+
+            border:
+                1px solid #334155;
+
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.75
+                );
+
+            color:
+                #cbd5e1;
+
+            padding:
+                10px 16px;
+
+            border-radius:
+                10px;
+
+            text-decoration:
+                none;
+
+            font-size:
+                14px;
+
+        }
+
+
+        .back-button:hover {
+
+            background:
+                #1e293b;
+
+            color:
+                white;
+
+        }
+
+
+        /* =========================================
+           CARD
+        ========================================= */
+
+        .card {
+
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    0.82
+                );
+
+            border:
+                1px solid
+                rgba(
+                    148,
+                    163,
+                    184,
+                    0.15
+                );
+
+            border-radius:
+                16px;
+
+            padding:
+                22px;
+
+            box-shadow:
+                0 20px 45px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    0.25
+                );
+
+            backdrop-filter:
+                blur(12px);
+
+        }
+
+
+        /* =========================================
+           HOST
+        ========================================= */
+
+        .host-header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                flex-start;
+
+            gap: 20px;
+
+            margin-bottom:
+                20px;
+
+        }
+
+
+        .host-name {
+
+            margin: 0;
+
+            font-size:
+                25px;
+
+            font-weight:
+                700;
+
+            color:
+                #f8fafc;
+
+        }
+
+
+        .host-user {
+
+            margin-top:
+                6px;
+
+            color:
+                #94a3b8;
+
+            font-size:
+                13px;
+
+        }
+
+
+        .camera-status {
+
+            display:
+                inline-flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+            padding:
+                7px 11px;
+
+            border-radius:
+                999px;
+
+            font-size:
+                13px;
+
+            font-weight:
+                600;
+
+            color:
+                #fcd34d;
+
+            background:
+                rgba(
+                    245,
+                    158,
+                    11,
+                    0.12
+                );
+
+            white-space:
+                nowrap;
+
+        }
+
+
+        .camera-status.online {
+
+            color:
+                #86efac;
+
+            background:
+                rgba(
+                    34,
+                    197,
+                    94,
+                    0.12
+                );
+
+        }
+
+
+        .camera-status.error {
+
+            color:
+                #fca5a5;
+
+            background:
+                rgba(
+                    239,
+                    68,
+                    68,
+                    0.12
+                );
+
+        }
+
+
+        .status-dot {
+
+            width:
+                8px;
+
+            height:
+                8px;
+
+            border-radius:
+                50%;
+
+            background:
+                currentColor;
+
+            flex-shrink:
+                0;
+
+        }
+
+
+        /* =========================================
+           VIDEO
+        ========================================= */
+
+        .video-wrapper {
+
+            position:
+                relative;
+
+            width:
+                100%;
+
+            background:
+                #020617;
+
+            border:
+                1px solid
+                rgba(
+                    148,
+                    163,
+                    184,
+                    0.12
+                );
+
+            border-radius:
+                14px;
+
+            overflow:
+                hidden;
+
+        }
+
+
+        video {
+
+            display:
+                block;
+
+            width:
+                100%;
+
+            height:
+                auto;
+
+            max-height:
+                75vh;
+
+            object-fit:
+                contain;
+
+            background:
+                #000;
+
+        }
+
+
+        .video-placeholder {
+
+            position:
+                absolute;
+
+            inset:
+                0;
+
+            min-height:
+                500px;
+
+            display:
+                flex;
+
+            flex-direction:
+                column;
+
+            justify-content:
+                center;
+
+            align-items:
+                center;
+
+            text-align:
+                center;
+
+            color:
+                #64748b;
+
+            padding:
+                30px;
+
+            pointer-events:
+                none;
+
+        }
+
+
+        .placeholder-icon {
+
+            font-size:
+                48px;
+
+            margin-bottom:
+                12px;
+
+        }
+
+
+        .placeholder-title {
+
+            color:
+                #cbd5e1;
+
+            font-size:
+                17px;
+
+        }
+
+
+        .placeholder-text {
+
+            margin-top:
+                7px;
+
+            font-size:
+                13px;
+
+        }
+
+
+        /* =========================================
+           CONTROLS
+        ========================================= */
+
+        .controls {
+
+            display:
+                flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+            gap:
+                12px;
+
+            margin-top:
+                16px;
+
+        }
+
+
+        .control-button {
+
+            border:
+                1px solid #334155;
+
+            background:
+                #1e293b;
+
+            color:
+                #e2e8f0;
+
+            padding:
+                9px 13px;
+
+            border-radius:
+                9px;
+
+            cursor:
+                pointer;
+
+            font-size:
+                13px;
+
+        }
+
+
+        .control-button:hover {
+
+            background:
+                #334155;
+
+        }
+
+
+        .volume-wrap {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            gap:
+                8px;
+
+        }
+
+
+        .volume-slider {
+
+            width:
+                120px;
+
+        }
+
+
+        .footer {
+
+            margin-top:
+                20px;
+
+            text-align:
+                center;
+
+            color:
+                #475569;
+
+            font-size:
+                12px;
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            body {
+
+                padding:
+                    20px 12px;
+
+            }
+
+
+            .header {
+
+                align-items:
+                    flex-start;
+
+            }
+
+
+            .header-title {
+
+                font-size:
+                    25px;
+
+            }
+
+
+            .host-header {
+
+                flex-direction:
+                    column;
+
+            }
+
+
+            .video-placeholder {
+
+                min-height:
+                    300px;
+
+            }
+
+
+            .controls {
+
+                flex-wrap:
+                    wrap;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <!-- =========================================
+         HEADER
+    ========================================= -->
+
+    <header class="header">
+
+        <div class="header-left">
+
+            <div class="header-icon">
+                📷
+            </div>
+
+
+            <div>
+
+                <h1
+                    class="header-title"
+                    id="page-title"
+                >
+                    Web Camera
+                </h1>
+
+
+                <div
+                    class="header-subtitle"
+                    id="page-subtitle"
+                >
+                    Remote camera and audio
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <a
+            href="/"
+            class="back-button"
+        >
+            ← Back
+        </a>
+
+    </header>
+
+
+    <!-- =========================================
+         CAMERA CARD
+    ========================================= -->
+
+    <section class="card">
+
+
+        <div class="host-header">
+
+
+            <div>
+
+                <h2
+                    class="host-name"
+                    id="host-name"
+                >
+                    Loading...
+                </h2>
+
+
+                <div
+                    class="host-user"
+                    id="host-user"
+                >
+                    User: —
+                </div>
+
+            </div>
+
+
+            <div
+                id="camera-status"
+                class="camera-status"
+            >
+
+                <span class="status-dot"></span>
+
+                Connecting...
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =====================================
+             VIDEO
+        ===================================== -->
+
+        <div class="video-wrapper">
+
+
+            <video
+                id="webcam-video"
+                autoplay
+                playsinline
+                muted
+            ></video>
+
+
+            <div
+                id="video-placeholder"
+                class="video-placeholder"
+            >
+
+                <div class="placeholder-icon">
+                    📷
+                </div>
+
+
+                <strong class="placeholder-title">
+                    Connecting to camera...
+                </strong>
+
+
+                <span class="placeholder-text">
+                    Waiting for video and audio stream.
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =====================================
+             CONTROLS
+        ===================================== -->
+
+        <div class="controls">
+
+
+            <div class="volume-wrap">
+
+
+                <button
+                    id="mute-button"
+                    class="control-button"
+                    type="button"
+                >
+                    🔊
+                </button>
+
+
+                <input
+                    id="volume-slider"
+                    class="volume-slider"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="100"
+                >
+
+            </div>
+
+
+            <button
+                id="fullscreen-button"
+                class="control-button"
+                type="button"
+            >
+                ⛶ Fullscreen
+            </button>
+
+
+        </div>
+
+
+    </section>
+
+
+    <div class="footer">
+        Remote Desktop Server
+    </div>
+
+
+</div>
+
+
+<script
+    src="/static/js/webcam.js?v=21"
+    defer
+></script>
+
+
+</body>
+
+</html>

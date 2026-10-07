@@ -1,0 +1,36 @@
+{
+  "cameras": [
+    {
+      "id": "cam1",
+      "name": "Yard Left",
+      "side": "left",
+      "device": "/dev/video0",
+      "audio_device": "hw:CARD=Camera,DEV=0",
+      "width": 640,
+      "height": 480,
+      "fps": 10,
+      "enabled": true
+    },
+    {
+      "id": "cam2",
+      "name": "Yard Right",
+      "side": "right",
+      "device": "/dev/video2",
+      "audio_device": "hw:CARD=Camera_1,DEV=0",
+      "width": 640,
+      "height": 480,
+      "fps": 10,
+      "enabled": true
+    }
+  ],
+  "audio_from": "cam1",
+  "motion": {
+    "enabled": true,
+    "record_seconds": 15,
+    "max_files_per_camera": 10,
+    "threshold": 25,
+    "min_changed_ratio": 0.13,
+    "cooldown_seconds": 20,
+    "check_interval": 2.0
+  }
+}

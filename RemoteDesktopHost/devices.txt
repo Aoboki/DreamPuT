@@ -1,0 +1,2 @@
+CAMERA_DEVICE=video=HP HD Camera
+AUDIO_DEVICE=audio=Microphone Array (2- Intelr Smart Sound Technology (Intelr SST))

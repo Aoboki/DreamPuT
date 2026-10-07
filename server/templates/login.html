@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/png" href="/static/PIT.png">
+    <link rel="shortcut icon" type="image/png" href="/static/PIT.png">
+    <link rel="apple-touch-icon" href="/static/PIT.png">
+
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Remote Desktop — Login</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/css/style.css?v=10"
+    >
+
+</head>
+
+<body>
+
+<div class="login-page">
+
+    <div class="login-card">
+
+        <div class="login-icon">
+            🖥️
+        </div>
+
+        <h1>
+            Remote Desktop
+        </h1>
+
+        <p class="login-subtitle">
+            Secure administrator access
+        </p>
+
+
+        <form id="login-form">
+
+            <label>
+                Username
+            </label>
+
+            <input
+                id="username"
+                type="text"
+                autocomplete="username"
+                placeholder="Enter username"
+                required
+            >
+
+
+            <label>
+                Password
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Enter password"
+                required
+            >
+
+
+            <button
+                id="login-button"
+                type="submit"
+            >
+                🔐 Sign in
+            </button>
+
+        </form>
+
+
+        <div
+            id="error"
+            class="login-error"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const form =
+    document.getElementById(
+        "login-form"
+    );
+
+const error =
+    document.getElementById(
+        "error"
+    );
+
+const button =
+    document.getElementById(
+        "login-button"
+    );
+
+
+form.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+        error.textContent = "";
+
+        button.disabled = true;
+
+        button.textContent =
+            "⏳ Signing in...";
+
+
+        const username =
+            document.getElementById(
+                "username"
+            ).value;
+
+        const password =
+            document.getElementById(
+                "password"
+            ).value;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/login",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                username:
+                                    username,
+
+                                password:
+                                    password
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (response.ok) {
+
+                window.location.replace(
+                    "/"
+                );
+
+                return;
+            }
+
+
+            error.textContent =
+                data.detail ||
+                "Login failed";
+
+
+        } catch (e) {
+
+            error.textContent =
+                "Connection error";
+
+
+        } finally {
+
+            button.disabled = false;
+
+            button.textContent =
+                "🔐 Sign in";
+
+        }
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>
