@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DreamPUT Host</string>
+    <string name="notification_channel">host_connection</string>
+    <string name="notification_title">Connected to Remote Desktop</string>
+    <string name="notification_text">Phone is visible on the website</string>
+</resources>

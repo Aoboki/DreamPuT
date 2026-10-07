@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- No AppCompat / Material — pure Android theme (avoids kotlin-stdlib-jdk8 pull) -->
+    <style name="Theme.RemoteDesktopAndroid" parent="@android:style/Theme.DeviceDefault.NoActionBar">
+        <item name="android:statusBarColor">#0F172A</item>
+        <item name="android:navigationBarColor">#0F172A</item>
+        <item name="android:windowBackground">#0F172A</item>
+        <item name="android:textColorPrimary">#E2E8F0</item>
+        <item name="android:textColorSecondary">#94A3B8</item>
+    </style>
+</resources>
